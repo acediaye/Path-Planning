@@ -1,5 +1,6 @@
 import pygame
 import sys
+import pprint
 
 # WHITE = (255, 255, 255)
 # BLACK = (0, 0, 0)
@@ -50,11 +51,12 @@ for row in range(10):
         
 grid[1][5] = 1
 pygame.init()
-WINDOW_SIZE = (400, 400)
+WINDOW_SIZE = (255, 255)
 SCREEN = pygame.display.set_mode(WINDOW_SIZE)
 pygame.display.set_caption('array grid')
 running = True
-clock = pygame.time.Clock()
+# clock = pygame.time.Clock()
+pp = pprint.PrettyPrinter(indent=4)
 
 while running:
     for event in pygame.event.get():
@@ -70,6 +72,7 @@ while running:
                 grid[row][col] = 0
             
             print(f'click {pos}, coor {row} {col}')
+            pp.pprint(grid)
             
     SCREEN.fill(BLACK)
 
@@ -78,10 +81,10 @@ while running:
             color = WHITE
             if grid[row][col] == 1:
                 color = GREEN
-            pygame.draw.rect(SCREEN, color, [(WIDTH+MARGIN)*col + MARGIN,
-                                             (HEIGHT+MARGIN)*row + MARGIN,
+            pygame.draw.rect(SCREEN, color, [(WIDTH+MARGIN)*col+MARGIN,
+                                             (HEIGHT+MARGIN)*row+MARGIN,
                                              WIDTH,
                                              HEIGHT])
-    clock.tick(60)
+    # clock.tick(60)
     pygame.display.flip()
 pygame.quit()
