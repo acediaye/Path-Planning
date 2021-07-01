@@ -46,8 +46,8 @@ class Node(object):
     def set_type(self, x: BlockType):
         self.type = x
 
-    def get_rect(self):
-        return self.rect
+    # def get_rect(self):
+    #     return self.rect
 
 # n1 = Node(1, 2, 3)
 # print(n1.row, n1.col, n1.width)
@@ -72,11 +72,13 @@ class Grid(object):
             for col in range(self.cols):
                 item = Node(row, col, self.block_size)
                 self.grid[row].append(item)
+        print(f'shape grid: {np.shape(self.grid)}')
 
     def draw_grid(self, window):
         for row in range(np.shape(self.grid)[0]):
             for col in range(np.shape(self.grid)[1]):
                 # print(self.grid[row][col].type)
+                # print(row, col)
                 if self.grid[row][col].type == BlockType.WALL:
                     self.grid[row][col].draw(window, BLACK)  # draw blocks
                 elif self.grid[row][col].type == BlockType.START:
@@ -103,14 +105,81 @@ class Grid(object):
                          (0, self.height), (self.width, self.height))  # bottom
         pygame.display.update()
 
+    def find_start_node(self):
+        for row in range(np.shape(self.grid)[0]):
+            for col in range(np.shape(self.grid)[1]):
+                if self.grid[row][col].type == BlockType.START:
+                    node = self.grid[row][col]
+                    print(row, col)
+                    return node
+                else:
+                    pass
+
+    def find_end_node(self):
+        for row in range(np.shape(self.grid)[0]):
+            for col in range(np.shape(self.grid)[1]):
+                if self.grid[row][col].type == BlockType.END:
+                    node = self.grid[row][col]
+                    print(row, col)
+                    return node
+                else:
+                    pass
+
+    def find_neighbors(self, current_block: Node):
+        neighbors = []
+        temp_r = current_block.row
+        temp_c = current_block.col
+        print(current_block.row, current_block.col)
+        for i in range(current_block.row-1, current_block.row+2, 1):
+            for j in range(current_block.col-1, current_block.col+2, 1):
+                if i >= 0 and i <= np.shape(self.grid)[0]:
+                    if j >= 0 and j <= np.shape(self.grid)[1]:
+                        neighbors.append(self.grid[i][j])
+                        # print(i, j)
+        neighbors.remove(self.grid[temp_r][temp_c])
+        print(len(neighbors))
 
 # g = Grid(300, 300, 100)
 # g.create_grid()
 # print(g.width, g.height, g.block_size, g.rows, g.cols)
 # g.draw_grid(SCREEN)
 
+
 class Astar(object):
-    pass
+    def __init__(self, grid: Grid):
+        self.grid = grid.grid
+
+    def distance(self, block1: Node, block2: Node):
+        # print(block1.x, block1.y, block2.x, block2.x)
+        dist_x = abs(block1.x - block2.x)
+        dist_y = abs(block1.y - block2.y)
+        # print(dist_x, dist_y)
+        dist = np.sqrt(dist_x**2 + dist_y**2)
+        # print(dist)
+        return int(dist)  # float into int, scaling in pixels
+
+    def find_path(self, start_block: Node, end_block: Node):
+        open_list = []
+        closed_list = []
+        open_list.append(start_block)
+
+        while len(open_list) > 0:
+            current_block = open_list[0]
+            print(current_block.row, current_block.col)
+            for i in range(1, len(open_list)):
+                if open_list[i].fCost < current_block.fCost:
+                    current_block = open_list[i]
+                    print(current_block.row, current_block.col)
+
+            open_list.remove(current_block)
+            closed_list.append(current_block)
+            current_block.type = BlockType.CLOSED
+
+            if current_block == end_block:
+                print('stop')
+                print(open_list)
+                print(closed_list)
+                return
 
 
 pygame.init()
@@ -124,6 +193,7 @@ if __name__ == '__main__':
     grid.create_grid()
     grid.draw_grid(SCREEN)
     cursor = BlockType.DEFAULT
+    path = Astar(grid)
 
     run = True
     while run:
@@ -165,5 +235,11 @@ if __name__ == '__main__':
                 elif event.key == pygame.K_7:
                     cursor = BlockType.PATH
                     print(cursor.name)
+                elif event.key == pygame.K_a:
+                    print(path.distance(grid.grid[0][0], grid.grid[10][10]))
+                    grid.find_neighbors(grid.grid[10][10])
+                elif event.key == pygame.K_b:
+                    grid.find_start_node()
+                    grid.find_end_node()
 
         grid.draw_grid(SCREEN)
