@@ -28,17 +28,17 @@ MAGENTA = (255, 0, 255)
 
 
 class Node(object):
-    def __init__(self, row, col, width):
+    def __init__(self, row, col, block_size):
         self.row = row
         self.col = col
-        self.x = row*width
-        self.y = col*width
-        self.width = width
+        self.x = row*block_size
+        self.y = col*block_size
+        self.block_size = block_size
         self.type = BlockType.DEFAULT
         self.gCost = 0
         self.hCost = 0
         self.fCost = self.gCost + self.hCost
-        self.rect = pygame.Rect(self.x, self.y, width, width)
+        self.rect = pygame.Rect(self.x, self.y, block_size, block_size)
 
     def draw(self, window, color):
         pygame.draw.rect(window, color, self.rect)
@@ -57,12 +57,12 @@ class Node(object):
 
 
 class Grid(object):
-    def __init__(self, width, height, size):
+    def __init__(self, width, height, block_size):
         self.width = width
         self.height = height
-        self.block_size = size
-        self.rows = int(width / size)
-        self.cols = int(height / size)
+        self.block_size = block_size
+        self.rows = int(width / block_size)
+        self.cols = int(height / block_size)
         self.grid = None
 
     def create_grid(self):
@@ -92,11 +92,15 @@ class Grid(object):
                 else:  # default
                     self.grid[row][col].draw(window, GRAY)
         for x in range(0, self.width, self.block_size):
-            pygame.draw.line(window, WHITE, (x, 0), (x, self.height))  # vertical lines
+            pygame.draw.line(window, WHITE,
+                             (x, 0), (x, self.height))  # vertical lines
             for y in range(0, self.height, self.block_size):
-                pygame.draw.line(window, WHITE, (0, y), (self.width, y))  # horizontal lines
-        pygame.draw.line(window, WHITE, (self.width, 0), (self.width, self.height))  # right line
-        pygame.draw.line(window, WHITE, (0, self.height), (self.width, self.height))  # bottom line
+                pygame.draw.line(window, WHITE,
+                                 (0, y), (self.width, y))  # horizontal lines
+        pygame.draw.line(window, WHITE,
+                         (self.width, 0), (self.width, self.height))  # right
+        pygame.draw.line(window, WHITE,
+                         (0, self.height), (self.width, self.height))  # bottom
         pygame.display.update()
 
 
@@ -104,6 +108,10 @@ class Grid(object):
 # g.create_grid()
 # print(g.width, g.height, g.block_size, g.rows, g.cols)
 # g.draw_grid(SCREEN)
+
+class Astar(object):
+    pass
+
 
 pygame.init()
 WINDOW_WIDTH = 600
@@ -157,7 +165,5 @@ if __name__ == '__main__':
                 elif event.key == pygame.K_7:
                     cursor = BlockType.PATH
                     print(cursor.name)
-                elif event.key == pygame.K_a:
-                    print(f'a')
 
         grid.draw_grid(SCREEN)
