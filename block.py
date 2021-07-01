@@ -2,6 +2,7 @@ from enum import Enum
 import pygame
 import numpy as np
 
+
 class BlockType(Enum):
     DEFAULT = 1
     WALL = 2
@@ -10,6 +11,7 @@ class BlockType(Enum):
     OPEN = 5
     CLOSED = 6
     PATH = 7
+
 
 # print(BlockType.DEFAULT)
 # print(BlockType.WALL.value)
@@ -24,6 +26,7 @@ YELLOW = (255, 255, 0)
 CYAN = (0, 255, 255)
 MAGENTA = (255, 0, 255)
 
+
 class Node(object):
     def __init__(self, row, col, width):
         self.row = row
@@ -36,13 +39,13 @@ class Node(object):
         self.hCost = 0
         self.fCost = self.gCost + self.hCost
         self.rect = pygame.Rect(self.x, self.y, width, width)
-    
+
     def draw(self, window, color):
         pygame.draw.rect(window, color, self.rect)
-    
+
     def set_type(self, x: BlockType):
         self.type = x
-        
+
     def get_rect(self):
         return self.rect
 
@@ -52,6 +55,7 @@ class Node(object):
 # n1.set_type(BlockType.WALL)
 # print(n1.type)
 
+
 class Grid(object):
     def __init__(self, width, height, size):
         self.width = width
@@ -60,7 +64,7 @@ class Grid(object):
         self.rows = int(width / size)
         self.cols = int(height / size)
         self.grid = None
-    
+
     def create_grid(self):
         self.grid = []
         for row in range(self.rows):
@@ -68,17 +72,25 @@ class Grid(object):
             for col in range(self.cols):
                 item = Node(row, col, self.block_size)
                 self.grid[row].append(item)
-    
+
     def draw_grid(self, window):
         for row in range(np.shape(self.grid)[0]):
             for col in range(np.shape(self.grid)[1]):
                 # print(self.grid[row][col].type)
-                if self.grid[row][col].type == BlockType.DEFAULT:
-                    self.grid[row][col].draw(window, GRAY)  # draw blocks
-                elif self.grid[row][col].type == BlockType.WALL:
+                if self.grid[row][col].type == BlockType.WALL:
                     self.grid[row][col].draw(window, BLACK)  # draw blocks
-                elif self.grid[row][col].type == BlockType.PATH:
+                elif self.grid[row][col].type == BlockType.START:
+                    self.grid[row][col].draw(window, GREEN)
+                elif self.grid[row][col].type == BlockType.END:
+                    self.grid[row][col].draw(window, RED)
+                elif self.grid[row][col].type == BlockType.OPEN:
+                    self.grid[row][col].draw(window, CYAN)
+                elif self.grid[row][col].type == BlockType.CLOSED:
                     self.grid[row][col].draw(window, MAGENTA)
+                elif self.grid[row][col].type == BlockType.PATH:
+                    self.grid[row][col].draw(window, BLUE)
+                else:  # default
+                    self.grid[row][col].draw(window, GRAY)
         for x in range(0, self.width, self.block_size):
             pygame.draw.line(window, WHITE, (x, 0), (x, self.height))  # vertical lines
             for y in range(0, self.height, self.block_size):
@@ -86,8 +98,8 @@ class Grid(object):
         pygame.draw.line(window, WHITE, (self.width, 0), (self.width, self.height))  # right line
         pygame.draw.line(window, WHITE, (0, self.height), (self.width, self.height))  # bottom line
         pygame.display.update()
-        
-        
+
+
 # g = Grid(300, 300, 100)
 # g.create_grid()
 # print(g.width, g.height, g.block_size, g.rows, g.cols)
@@ -103,6 +115,8 @@ if __name__ == '__main__':
     grid = Grid(WINDOW_WIDTH, WINDOW_HEIGHT, BLOCK_SIZE)
     grid.create_grid()
     grid.draw_grid(SCREEN)
+    cursor = BlockType.DEFAULT
+
     run = True
     while run:
         for event in pygame.event.get():
@@ -114,10 +128,36 @@ if __name__ == '__main__':
                 col = int(pos[1] / BLOCK_SIZE)
                 print(f'pos: {row}, {col}')
                 print(grid.grid[row][col].type)
-                if grid.grid[row][col].type == BlockType.DEFAULT:
-                    grid.grid[row][col].type = BlockType.WALL
-                elif grid.grid[row][col].type == BlockType.WALL:
-                    grid.grid[row][col].type = BlockType.PATH
-                else:
-                    grid.grid[row][col].type = BlockType.DEFAULT
-                grid.draw_grid(SCREEN)
+                # if grid.grid[row][col].type == BlockType.DEFAULT:
+                #     grid.grid[row][col].type = BlockType.WALL
+                # elif grid.grid[row][col].type == BlockType.WALL:
+                #     grid.grid[row][col].type = BlockType.PATH
+                # else:
+                #     grid.grid[row][col].type = BlockType.DEFAULT
+                grid.grid[row][col].type = cursor
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    cursor = BlockType.DEFAULT
+                    print(cursor.name)
+                elif event.key == pygame.K_2:
+                    cursor = BlockType.WALL
+                    print(cursor.name)
+                elif event.key == pygame.K_3:
+                    cursor = BlockType.START
+                    print(cursor.name)
+                elif event.key == pygame.K_4:
+                    cursor = BlockType.END
+                    print(cursor.name)
+                elif event.key == pygame.K_5:
+                    cursor = BlockType.OPEN
+                    print(cursor.name)
+                elif event.key == pygame.K_6:
+                    cursor = BlockType.CLOSED
+                    print(cursor.name)
+                elif event.key == pygame.K_7:
+                    cursor = BlockType.PATH
+                    print(cursor.name)
+                elif event.key == pygame.K_a:
+                    print(f'a')
+
+        grid.draw_grid(SCREEN)
