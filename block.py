@@ -190,7 +190,7 @@ class Astar(object):
                 return
 
             # print(f'here: {self.gridOb.find_neighbors(current_block)}')
-            for neighbor in self.gridOb.find_neighbors(current_block):  # TODO fix this non iterable
+            for neighbor in self.gridOb.find_neighbors(current_block):
                 if neighbor.type == BlockType.WALL or neighbor in closed_list:
                     continue
                 else:
