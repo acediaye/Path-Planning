@@ -35,9 +35,10 @@ class Node(object):
         self.y = col*block_size
         self.block_size = block_size
         self.type = BlockType.DEFAULT
-        self.gCost = 0
-        self.hCost = 0
+        self.gCost = 0  # distance from starting node
+        self.hCost = 0  # distance from end node
         self.fCost = self.gCost + self.hCost
+        self.parent = None
         self.rect = pygame.Rect(self.x, self.y, block_size, block_size)
 
     def draw(self, window, color):
@@ -146,8 +147,9 @@ class Grid(object):
 
 
 class Astar(object):
-    def __init__(self, grid: Grid):
-        self.grid = grid.grid
+    def __init__(self, gridOb: Grid):
+        self.gridOb = gridOb
+        self.grid = gridOb.grid
 
     def distance(self, block1: Node, block2: Node):
         # print(block1.x, block1.y, block2.x, block2.x)
@@ -181,6 +183,22 @@ class Astar(object):
                 print(closed_list)
                 return
 
+            for neighbor in self.gridOb.find_neighbors(current_block):  # TODO fix this non iterable
+                if neighbor.type == BlockType.WALL or neighbor in closed_list:
+                    continue
+                else:
+                    new_cost = (current_block.gCost
+                                + self.distance(current_block, neighbor))
+                    print(new_cost)
+                    if new_cost < neighbor.gCost or neighbor not in open_list:
+                        neighbor.gCost = new_cost
+                        neighbor.hCost = self.distance(neighbor, end_block)
+                        neighbor.parent = current_block
+
+                        if neighbor not in open_list:
+                            open_list.append(neighbor)
+                            neighbor.type = BlockType.OPEN
+
 
 pygame.init()
 WINDOW_WIDTH = 600
@@ -189,11 +207,11 @@ BLOCK_SIZE = 20
 
 if __name__ == '__main__':
     SCREEN = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    grid = Grid(WINDOW_WIDTH, WINDOW_HEIGHT, BLOCK_SIZE)
-    grid.create_grid()
-    grid.draw_grid(SCREEN)
+    gridOb = Grid(WINDOW_WIDTH, WINDOW_HEIGHT, BLOCK_SIZE)
+    gridOb.create_grid()
+    gridOb.draw_grid(SCREEN)
     cursor = BlockType.DEFAULT
-    path = Astar(grid)
+    path = Astar(gridOb)
 
     run = True
     while run:
@@ -205,14 +223,14 @@ if __name__ == '__main__':
                 row = int(pos[0] / BLOCK_SIZE)
                 col = int(pos[1] / BLOCK_SIZE)
                 print(f'pos: {row}, {col}')
-                print(grid.grid[row][col].type)
+                print(gridOb.grid[row][col].type)
                 # if grid.grid[row][col].type == BlockType.DEFAULT:
                 #     grid.grid[row][col].type = BlockType.WALL
                 # elif grid.grid[row][col].type == BlockType.WALL:
                 #     grid.grid[row][col].type = BlockType.PATH
                 # else:
                 #     grid.grid[row][col].type = BlockType.DEFAULT
-                grid.grid[row][col].type = cursor
+                gridOb.grid[row][col].type = cursor
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
                     cursor = BlockType.DEFAULT
@@ -236,10 +254,14 @@ if __name__ == '__main__':
                     cursor = BlockType.PATH
                     print(cursor.name)
                 elif event.key == pygame.K_a:
-                    print(path.distance(grid.grid[0][0], grid.grid[10][10]))
-                    grid.find_neighbors(grid.grid[10][10])
+                    print(path.distance(gridOb.grid[0][0],
+                                        gridOb.grid[10][10]))
+                    gridOb.find_neighbors(gridOb.grid[10][10])
                 elif event.key == pygame.K_b:
-                    grid.find_start_node()
-                    grid.find_end_node()
+                    gridOb.find_start_node()
+                    gridOb.find_end_node()
+                elif event.key == pygame.K_c:
+                    path.find_path(gridOb.find_start_node(),
+                                   gridOb.find_end_node())
 
-        grid.draw_grid(SCREEN)
+        gridOb.draw_grid(SCREEN)
