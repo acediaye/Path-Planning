@@ -234,6 +234,9 @@ class Astar(object):
     def find_path(self, start_block: Node, end_block: Node):
         open_list = []
         closed_list = []
+        start_block.set_gCost(0)
+        start_block.set_hCost(self.distance(start_block, end_block))
+        start_block.set_fCost(int(start_block.get_gCost() + start_block.get_hCost()))
         open_list.append(start_block)
 
         while len(open_list) > 0:
@@ -249,7 +252,7 @@ class Astar(object):
             closed_list.append(current_block)
 
             if current_block == end_block:
-                print('stop')
+                print('stopped')
                 return
 
             for neighbor in self.gridOb.find_neighbors(current_block):
@@ -270,6 +273,7 @@ class Astar(object):
 
     def show_path(self, start_block: Node, end_block: Node):
         """
+        fetch path from end to start, then reverse list
         color path
         """
         path = []
