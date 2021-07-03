@@ -1,6 +1,7 @@
 from enum import Enum
 import pygame
 import numpy as np
+# import pprint
 
 
 class BlockType(Enum):
@@ -29,15 +30,17 @@ MAGENTA = (255, 0, 255)
 
 class Node(object):
     def __init__(self, row, col, block_size):
+        # node variables
         self.row = row
         self.col = col
+        # x, y in pixels count
         self.x = row*block_size
         self.y = col*block_size
         self.block_size = block_size
         self.type = BlockType.DEFAULT
         self.gCost = 0  # distance from starting node
         self.hCost = 0  # distance from end node
-        self.fCost = self.gCost + self.hCost
+        self.fCost = self.gCost + self.hCost  # total cost
         self.parent = None
         self.rect = pygame.Rect(self.x, self.y, block_size, block_size)
 
@@ -46,9 +49,16 @@ class Node(object):
 
     def set_type(self, x: BlockType):
         self.type = x
+        
+    def set_gCost(self, x: int):
+        self.gCost = x
+    
+    def set_hCost(self, x: int):
+        self.hCost = x
+    
+    def set_fCost(self, x: int):
+        self.fCost = x
 
-    # def get_rect(self):
-    #     return self.rect
 
 # n1 = Node(1, 2, 3)
 # print(n1.row, n1.col, n1.width)
@@ -59,12 +69,15 @@ class Node(object):
 
 class Grid(object):
     def __init__(self, width, height, block_size):
+        # window variables
         self.width = width
         self.height = height
         self.block_size = block_size
+        # grid variables
         self.rows = int(width / block_size)
         self.cols = int(height / block_size)
         self.grid = None
+        # self.pp = pprint.PrettyPrinter(indent=4)
 
     def create_grid(self):
         self.grid = []
@@ -76,24 +89,25 @@ class Grid(object):
         print(f'shape grid: {np.shape(self.grid)}')
 
     def draw_grid(self, window):
-        for row in range(np.shape(self.grid)[0]):
-            for col in range(np.shape(self.grid)[1]):
+        rows, cols = np.shape(self.grid)
+        for r in range(rows):
+            for c in range(cols):
                 # print(self.grid[row][col].type)
                 # print(row, col)
-                if self.grid[row][col].type == BlockType.WALL:
-                    self.grid[row][col].draw(window, BLACK)  # draw blocks
-                elif self.grid[row][col].type == BlockType.START:
-                    self.grid[row][col].draw(window, GREEN)
-                elif self.grid[row][col].type == BlockType.END:
-                    self.grid[row][col].draw(window, RED)
-                elif self.grid[row][col].type == BlockType.OPEN:
-                    self.grid[row][col].draw(window, CYAN)
-                elif self.grid[row][col].type == BlockType.CLOSED:
-                    self.grid[row][col].draw(window, MAGENTA)
-                elif self.grid[row][col].type == BlockType.PATH:
-                    self.grid[row][col].draw(window, BLUE)
+                if self.grid[r][c].type == BlockType.WALL:
+                    self.grid[r][c].draw(window, BLACK)  # draw blocks
+                elif self.grid[r][c].type == BlockType.START:
+                    self.grid[r][c].draw(window, GREEN)
+                elif self.grid[r][c].type == BlockType.END:
+                    self.grid[r][c].draw(window, RED)
+                elif self.grid[r][c].type == BlockType.OPEN:
+                    self.grid[r][c].draw(window, CYAN)
+                elif self.grid[r][c].type == BlockType.CLOSED:
+                    self.grid[r][c].draw(window, MAGENTA)
+                elif self.grid[r][c].type == BlockType.PATH:
+                    self.grid[r][c].draw(window, BLUE)
                 else:  # default
-                    self.grid[row][col].draw(window, GRAY)
+                    self.grid[r][c].draw(window, GRAY)
         for x in range(0, self.width, self.block_size):
             pygame.draw.line(window, WHITE,
                              (x, 0), (x, self.height))  # vertical lines
@@ -107,41 +121,84 @@ class Grid(object):
         pygame.display.update()
 
     def find_start_node(self):
-        for row in range(np.shape(self.grid)[0]):
-            for col in range(np.shape(self.grid)[1]):
-                if self.grid[row][col].type == BlockType.START:
-                    node = self.grid[row][col]
-                    print(f'start node: {row}, {col}')
+        """
+        find the first start node
+        """
+        rows, cols = np.shape(self.grid)
+        for r in range(rows):
+            for c in range(cols):
+                if self.grid[r][c].type == BlockType.START:
+                    node = self.grid[r][c]
+                    print(f'start node: {r}, {c}')
                     return node
                 else:
                     pass
         return None
 
     def find_end_node(self):
-        for row in range(np.shape(self.grid)[0]):
-            for col in range(np.shape(self.grid)[1]):
-                if self.grid[row][col].type == BlockType.END:
-                    node = self.grid[row][col]
-                    print(f'end node: {row}, {col}')
+        """
+        find the first end node
+        """
+        rows, cols = np.shape(self.grid)
+        for r in range(rows):
+            for c in range(cols):
+                if self.grid[r][c].type == BlockType.END:
+                    node = self.grid[r][c]
+                    print(f'end node: {r}, {c}')
                     return node
                 else:
                     pass
         return None
 
     def find_neighbors(self, current_block: Node):
+        """
+        given block, find the 8 neighbor blocks
+        return: list
+            list of neighbors
+        """
         neighbors = []
         temp_r = current_block.row
         temp_c = current_block.col
-        # print(current_block.row, current_block.col)
+        rows, cols = np.shape(self.grid)
         for i in range(current_block.row-1, current_block.row+2, 1):
             for j in range(current_block.col-1, current_block.col+2, 1):
-                if i >= 0 and i <= np.shape(self.grid)[0]:
-                    if j >= 0 and j <= np.shape(self.grid)[1]:
+                if i >= 0 and i <= rows:
+                    if j >= 0 and j <= cols:
                         neighbors.append(self.grid[i][j])
                         # print(i, j)
         neighbors.remove(self.grid[temp_r][temp_c])
         # print(len(neighbors))
         return neighbors
+
+    def print_fcost(self):
+        rows, cols = np.shape(self.grid)
+        arr = np.zeros(shape=(rows, cols), dtype=int)
+        for r in range(rows):
+            for c in range(cols):
+                arr[r][c] = self.grid[r][c].fCost
+        arr = arr.T  # pygame is in col x row instead
+        print('f cost')
+        print(arr)
+    
+    def print_gcost(self):
+        rows, cols = np.shape(self.grid)
+        arr = np.zeros(shape=(rows, cols), dtype=int)
+        for r in range(rows):
+            for c in range(cols):
+                arr[r][c] = self.grid[r][c].gCost
+        arr = arr.T  # pygame is in col x row instead
+        print('g cost')
+        print(arr)
+    
+    def print_hcost(self):
+        rows, cols = np.shape(self.grid)
+        arr = np.zeros(shape=(rows, cols), dtype=int)
+        for r in range(rows):
+            for c in range(cols):
+                arr[r][c] = self.grid[r][c].hCost
+        arr = arr.T  # pygame is in col x row instead
+        print('h cost')
+        print(arr)
 
 # g = Grid(300, 300, 100)
 # g.create_grid()
@@ -151,16 +208,20 @@ class Grid(object):
 
 class Astar(object):
     def __init__(self, gridOb: Grid):
+        # grid object
         self.gridOb = gridOb
+        # actual grid
         self.grid = gridOb.grid
 
     def distance(self, block1: Node, block2: Node):
-        # print(block1.x, block1.y, block2.x, block2.x)
+        """
+        block 1, block 2: nodes
+        return
+            cartesian distance
+        """
         dist_x = abs(block1.x - block2.x)
         dist_y = abs(block1.y - block2.y)
-        # print(dist_x, dist_y)
         dist = np.sqrt(dist_x**2 + dist_y**2)
-        # print(dist)
         return int(dist)  # float into int, scaling in pixels
 
     def find_path(self, start_block: Node, end_block: Node):
@@ -169,44 +230,42 @@ class Astar(object):
         open_list.append(start_block)
 
         while len(open_list) > 0:
-            current_block = open_list[0]
-            # print(current_block.row, current_block.col)
-
-            for i in range(1, len(open_list)):
-                if (open_list[i].fCost < current_block.fCost
+            current_block = open_list[0]  # take first node in list
+            for i in range(1, len(open_list)):  # find lowest f cost
+                if (open_list[i].fCost < current_block.fCost  # cost smaller
                    or open_list[i].fCost == current_block.fCost
-                   and open_list[i].hCost < current_block.hCost):
+                   and open_list[i].hCost < current_block.hCost):  # closer to end
                     current_block = open_list[i]
-                    # print(current_block.row, current_block.col)
 
             open_list.remove(current_block)
-            closed_list.append(current_block)
             current_block.type = BlockType.CLOSED
+            closed_list.append(current_block)
 
             if current_block == end_block:
                 print('stop')
-                # print(open_list)
-                # print(closed_list)
                 return
 
-            # print(f'here: {self.gridOb.find_neighbors(current_block)}')
             for neighbor in self.gridOb.find_neighbors(current_block):
                 if neighbor.type == BlockType.WALL or neighbor in closed_list:
                     continue
                 else:
-                    new_cost = (current_block.gCost
+                    shorter_cost = (current_block.gCost
                                 + self.distance(current_block, neighbor))
-                    print(new_cost)
-                    if new_cost < neighbor.gCost or neighbor not in open_list:
-                        neighbor.gCost = new_cost
-                        neighbor.hCost = self.distance(neighbor, end_block)
+                    # print(shorter_cost)
+                    if shorter_cost < neighbor.gCost or neighbor not in open_list:
+                        neighbor.gCost = shorter_cost  # cost from start
+                        neighbor.hCost = self.distance(neighbor, end_block)  # cost to end
+                        neighbor.fCost = int(neighbor.gCost + neighbor.hCost)
                         neighbor.parent = current_block
 
                         if neighbor not in open_list:
-                            open_list.append(neighbor)
                             neighbor.type = BlockType.OPEN
+                            open_list.append(neighbor)
 
     def show_path(self, start_block: Node, end_block: Node):
+        """
+        color path
+        """
         path = []
         current_block = end_block
         while current_block != start_block:
@@ -284,5 +343,11 @@ if __name__ == '__main__':
                     end = gridOb.find_end_node()
                     path.find_path(start, end)
                     path.show_path(start, end)
+                elif event.key == pygame.K_f:
+                    gridOb.print_fcost()
+                elif event.key == pygame.K_g:
+                    gridOb.print_gcost()
+                elif event.key == pygame.K_h:
+                    gridOb.print_hcost()
 
         gridOb.draw_grid(SCREEN)
