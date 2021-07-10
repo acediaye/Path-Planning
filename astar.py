@@ -45,6 +45,9 @@ class Node(object):
 
     def draw(self, window, color):
         pygame.draw.rect(window, color, self.rect)
+        font = pygame.font.SysFont('arial', 10)  # name, size
+        text = font.render(f'{self.fCost}', True, BLACK)  # text, antialias, color
+        window.blit(text, (self.x+2, self.y))  # source, destination
 
     def set_type(self, x: BlockType):
         self.type = x
